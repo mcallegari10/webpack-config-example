@@ -12,14 +12,6 @@ module.exports = {
     path: path.resolve(__dirname, 'build')
   },
   target: 'web',
-  mode: 'development',
-  devServer: {
-    contentBase: path.resolve(__dirname, 'build'),
-    compress: true,
-    port: 3000,
-    hot: true,
-    open: true
-  },
   resolve: {
     extensions: ['.js']
   },
@@ -36,41 +28,44 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['babel-preset-es2015']
+            presets: ['babel-preset-es2015'],
+            cacheDirectory: true
           }
         }
       },
       {
         test: /\.scss$/,
         include: path.resolve(__dirname, 'src'),
-        use: [
-          'style-loader',
-          'css-loader',
-          {
-            loader: 'postcss-loader',
-            options: {
-              ident: 'postcss',
-              plugins: () => [
-                require('postcss-flexbugs-fixes'),
-                autoprefixer({
-                  browsers: [
-                    '>1%',
-                    'last 4 versions',
-                    'Firefox ESR',
-                    'not ie <9'
-                  ],
-                  flexbox: 'no-2009'
-                })
-              ]
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: [
+            'css-loader',
+            {
+              loader: 'postcss-loader',
+              options: {
+                ident: 'postcss',
+                plugins: () => [
+                  require('postcss-flexbugs-fixes'),
+                  autoprefixer({
+                    browsers: [
+                      '>1%',
+                      'last 4 versions',
+                      'Firefox ESR',
+                      'not ie <9'
+                    ],
+                    flexbox: 'no-2009'
+                  })
+                ]
+              }
+            },
+            {
+              loader: 'sass-loader',
+              options: {
+                includePaths: [path.resolve(__dirname,'/src/scss')]
+              }
             }
-          },
-          {
-            loader: 'sass-loader',
-            options: {
-              includePaths: [path.resolve(__dirname,'/src/scss')]
-            }
-          }
-        ]
+          ]
+        })
       }
     ]
   },
@@ -80,11 +75,6 @@ module.exports = {
       inject: true,
       template: './src/index.pug'
     }),
-    new webpack.HotModuleReplacementPlugin()
-  ],
-  optimization: {
-    splitChunks: {
-      chunks: 'all'
-    }
-  }
+    new ExtractTextPlugin('styles.[hash:8].css')
+  ]
 };
