@@ -2,13 +2,12 @@ const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const autoprefixer = require('autoprefixer');
 
 module.exports = {
   entry: './src/index.js',
   output: {
-    filename: 'bundle.[hash:8].js',
+    filename: 'bundle.js',
     path: path.resolve(__dirname, 'build')
   },
   target: 'web',
@@ -71,6 +70,15 @@ module.exports = {
             }
           }
         ]
+      },
+      {
+        test: /\.(jpg|png|gif|svg)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            name: 'assets/[name].[ext]'
+          }
+        }
       }
     ]
   },
@@ -80,6 +88,7 @@ module.exports = {
       inject: true,
       template: './src/index.pug'
     }),
+    new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin()
   ],
   optimization: {

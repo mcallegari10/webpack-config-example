@@ -66,6 +66,18 @@ module.exports = {
             }
           ]
         })
+      },
+      {
+        test: /\.(jpg|png|gif|svg)$/,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: 'assets/[sha1:hash:base64].[ext]'
+            }
+          },
+          'image-webpack-loader'
+        ]
       }
     ]
   },
