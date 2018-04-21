@@ -5,19 +5,25 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const autoprefixer = require('autoprefixer');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: {
+    // TODO change this paths to add automatically all files inside views/templates
+    index: './src/index.js',
+    contacts: './src/views/contact/index.js'
+  },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'build')
   },
   target: 'web',
   mode: 'development',
+  // TODO add more options to make the build process more readable
   devServer: {
     contentBase: path.resolve(__dirname, 'build'),
     compress: true,
     port: 3000,
     hot: true,
-    open: true
+    open: true,
+    https: true
   },
   resolve: {
     extensions: ['.js']
@@ -26,8 +32,17 @@ module.exports = {
     rules: [
       {
         test: /\.pug$/,
-        include: path.resolve(__dirname, 'src'),
-        use: 'pug-loader'
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].html'
+            }
+          },
+          'extract-loader',
+          'html-loader',
+          'pug-html-loader'
+        ]
       },
       {
         test: /\.js$/,
@@ -35,11 +50,18 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['babel-preset-es2015']
+            presets: [
+              ['env', {
+                'targets': [
+                  'last 2 versions', 'safari >= 7', 'not ie < 9'
+                ]
+              }]
+            ]
           }
         }
       },
       {
+        // TODO add .css for module imports
         test: /\.scss$/,
         include: path.resolve(__dirname, 'src'),
         use: [
@@ -72,6 +94,7 @@ module.exports = {
         ]
       },
       {
+        // TODO add a way to optimize assets size
         test: /\.(jpg|png|gif|svg)$/,
         use: {
           loader: 'file-loader',
@@ -84,13 +107,10 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin(['build']),
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: './src/index.pug'
-    }),
     new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin()
   ],
+  // TODO add more optimization options
   optimization: {
     splitChunks: {
       chunks: 'all'

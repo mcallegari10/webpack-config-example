@@ -6,9 +6,12 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const autoprefixer = require('autoprefixer');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: {
+    index: './src/index.js',
+    contacts: './src/views/contact/index.js'
+  },
   output: {
-    filename: 'bundle.[hash:8].js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'build')
   },
   target: 'web',
@@ -19,8 +22,17 @@ module.exports = {
     rules: [
       {
         test: /\.pug$/,
-        include: path.resolve(__dirname, 'src'),
-        use: 'pug-loader'
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].html'
+            }
+          },
+          'extract-loader',
+          'html-loader',
+          'pug-html-loader'
+        ]
       },
       {
         test: /\.js$/,
@@ -28,8 +40,13 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['babel-preset-es2015'],
-            cacheDirectory: true
+            presets: [
+              ['env', {
+                'targets': [
+                  'last 2 versions', 'safari >= 7', 'not ie < 9'
+                ]
+              }]
+            ]
           }
         }
       },
@@ -83,10 +100,6 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin(['build']),
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: './src/index.pug'
-    }),
     new ExtractTextPlugin('styles.[hash:8].css')
   ]
 };
