@@ -1,5 +1,5 @@
-import './scss/styles.scss';
 import './index.pug';
+import './scss/styles.scss';
 
 const button = document.getElementById('mainButton');
 
