@@ -1,0 +1,9 @@
+{
+  "presets": [
+    ["env", {
+      "targets": [
+        "last 2 versions", "safari >= 7", "not ie < 9"
+      ]
+    }]
+  ]
+}

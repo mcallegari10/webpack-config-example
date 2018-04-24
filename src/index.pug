@@ -7,10 +7,12 @@ head
   title
     | Webpack example
 body
-  h1.title
-    | This is a Webpack example
-  button.simple-button(id="mainButton" type="button")
-    | Hello!
-  img(src='assets/vue.png')
-  a(href='contact.html')
-    | Contacts
+  #app
+    h1.title
+      | This is a Webpack example
+    button.simple-button(id="mainButton" type="button")
+      | Hello!
+    img(src='./assets/vue.png')
+    a(href='./contact.html')
+      | Contacts
+  script(src='./index.js')

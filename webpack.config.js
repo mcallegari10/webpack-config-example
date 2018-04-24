@@ -1,17 +1,26 @@
-const webpack = require('webpack');
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const autoprefixer = require('autoprefixer');
+'use strict'
+
+const webpack = require('webpack')
+const path = require('path')
+const CleanWebpackPlugin = require('clean-webpack-plugin')
+const autoprefixer = require('autoprefixer')
+const glob = require('glob')
+
+/**
+ * We need this function to retrieve each page in a multi-page app
+ *  without the need to change the config each time we create a new one
+ */
+const entry = glob
+  .sync('./src/**/*.js')
+  .reduce(
+    (entries, entry) =>
+      Object.assign(entries, { [path.parse(entry).name]: entry })
+    , { index: path.resolve('/src/index.js') }
+  )
 
 module.exports = {
-  entry: {
-    // FIXME: change this paths to add automatically all files inside views/templates
-    index: './src/index.js',
-    contacts: './src/views/contact/index.js'
-  },
+  entry,
   output: {
-    // TODO: import vendors from a separate chunk
     filename: '[name].js',
     path: path.resolve(__dirname, 'build')
   },
@@ -27,13 +36,37 @@ module.exports = {
     https: true
   },
   resolve: {
-    extensions: ['.js']
+    extensions: ['.js'],
+    alias: {
+      vue: 'vue/dist/vue.js'
+    }
   },
   module: {
     rules: [
+      /**
+       * We need the double Pug config to separate the index file
+       * from the another views/templates
+       */
       {
-        // FIXME: JS and CSS files aren't being injected
         test: /\.pug$/,
+        include: path.resolve(__dirname, 'src/views'),
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              /**
+               * HTML files will be at the root for the url to be as short as possible
+               */
+              name: '[name].html'
+            }
+          },
+          'extract-loader',
+          'html-loader',
+          'pug-html-loader'
+        ]
+      },
+      {
+        test: /index.pug$/,
         use: [
           {
             loader: 'file-loader',
@@ -46,26 +79,61 @@ module.exports = {
           'pug-html-loader'
         ]
       },
+      // TODO: Lint the app before building?
       {
         test: /\.js$/,
         exclude: ['node_modules'],
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [
-              ['env', {
-                'targets': [
-                  'last 2 versions', 'safari >= 7', 'not ie < 9'
-                ]
-              }]
-            ]
-          }
-        }
+        use: 'babel-loader'
       },
-      // TODO: add .css for module imports
       {
         test: /\.scss$/,
-        include: path.resolve(__dirname, 'src'),
+        include: path.resolve(__dirname, 'src/scss'),
+        use: [
+          {
+            loader: 'style-loader',
+            options: {
+              hmr: true
+            }
+          },
+          'css-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              ident: 'postcss',
+              plugins: () => [
+                require('postcss-flexbugs-fixes'),
+                autoprefixer({
+                  browsers: [
+                    '>1%',
+                    'last 4 versions',
+                    'Firefox ESR',
+                    'not ie <9'
+                  ],
+                  flexbox: 'no-2009'
+                })
+              ]
+            }
+          },
+          {
+            loader: 'thread-loader',
+            options: {
+              workers: 2,
+              poolParallelJobs: 50
+            }
+          },
+          {
+            loader: 'sass-loader',
+            options: {
+              includePaths: [path.resolve(__dirname,'src/scss')]
+            }
+          }
+        ]
+      },
+      /**
+       * This loaders are needed to get the necessary styles from external modules
+       */
+      {
+        test: /\.css$/,
         use: [
           'style-loader',
           'css-loader',
@@ -87,13 +155,6 @@ module.exports = {
               ]
             }
           },
-          // TODO: add thread-loader? see perf
-          {
-            loader: 'sass-loader',
-            options: {
-              includePaths: [path.resolve(__dirname,'/src/scss')]
-            }
-          }
         ]
       },
       {
@@ -117,7 +178,10 @@ module.exports = {
   // TODO: add more optimization options
   optimization: {
     splitChunks: {
-      chunks: 'all'
+      chunks: 'async'
     }
+  },
+  performance: {
+    hints: false
   }
-};
+}
